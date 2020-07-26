@@ -4,7 +4,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
 /// Build the Scroll Thumb and label using the current configuration
-typedef Widget ScrollThumbBuilder(
+typedef ScrollThumbBuilder = Widget Function(
   Color backgroundColor,
   Animation<double> thumbAnimation,
   Animation<double> labelAnimation,
@@ -14,13 +14,13 @@ typedef Widget ScrollThumbBuilder(
 });
 
 /// Build a Text widget using the current scroll offset
-typedef Text LabelTextBuilder(double offsetY);
+typedef LabelTextBuilder = Text Function(double offsetY);
 
 /// A widget that will display a BoxScrollView with a ScrollThumb that can be dragged
 /// for quick navigation of the BoxScrollView.
 class DraggableScrollbar extends StatefulWidget {
   /// The view that will be scrolled with the scroll thumb
-  final BoxScrollView child;
+  final Widget child;
 
   /// A function that builds a thumb using the current configuration
   final ScrollThumbBuilder scrollThumbBuilder;
@@ -67,7 +67,6 @@ class DraggableScrollbar extends StatefulWidget {
     this.labelConstraints,
   })  : assert(controller != null),
         assert(scrollThumbBuilder != null),
-        assert(child.scrollDirection == Axis.vertical),
         super(key: key);
 
   DraggableScrollbar.rrect({
@@ -83,8 +82,7 @@ class DraggableScrollbar extends StatefulWidget {
     this.scrollbarTimeToFade = const Duration(milliseconds: 600),
     this.labelTextBuilder,
     this.labelConstraints,
-  })  : assert(child.scrollDirection == Axis.vertical),
-        scrollThumbBuilder =
+  })  : scrollThumbBuilder =
             _thumbRRectBuilder(scrollThumbKey, alwaysVisibleScrollThumb),
         super(key: key);
 
@@ -101,8 +99,7 @@ class DraggableScrollbar extends StatefulWidget {
     this.scrollbarTimeToFade = const Duration(milliseconds: 600),
     this.labelTextBuilder,
     this.labelConstraints,
-  })  : assert(child.scrollDirection == Axis.vertical),
-        scrollThumbBuilder =
+  })  : scrollThumbBuilder =
             _thumbArrowBuilder(scrollThumbKey, alwaysVisibleScrollThumb),
         super(key: key);
 
@@ -119,15 +116,14 @@ class DraggableScrollbar extends StatefulWidget {
     this.scrollbarTimeToFade = const Duration(milliseconds: 600),
     this.labelTextBuilder,
     this.labelConstraints,
-  })  : assert(child.scrollDirection == Axis.vertical),
-        scrollThumbBuilder = _thumbSemicircleBuilder(
+  })  : scrollThumbBuilder = _thumbSemicircleBuilder(
             heightScrollThumb * 0.6, scrollThumbKey, alwaysVisibleScrollThumb),
         super(key: key);
 
   @override
   _DraggableScrollbarState createState() => _DraggableScrollbarState();
 
-  static buildScrollThumbAndLabel(
+  static Widget buildScrollThumbAndLabel(
       {@required Widget scrollThumb,
       @required Color backgroundColor,
       @required Animation<double> thumbAnimation,
@@ -366,7 +362,7 @@ class _DraggableScrollbarState extends State<DraggableScrollbar>
 
   @override
   Widget build(BuildContext context) {
-    Widget labelText;
+    Text labelText;
     if (widget.labelTextBuilder != null && _isDragInProcess) {
       labelText = widget.labelTextBuilder(
         _viewOffset + _barOffset + widget.heightScrollThumb / 2,
@@ -380,6 +376,7 @@ class _DraggableScrollbarState extends State<DraggableScrollbar>
       return NotificationListener<ScrollNotification>(
         onNotification: (ScrollNotification notification) {
           changePosition(notification);
+          return false;
         },
         child: Stack(
           children: <Widget>[
@@ -414,7 +411,7 @@ class _DraggableScrollbarState extends State<DraggableScrollbar>
   //scroll bar has received notification that it's view was scrolled
   //so it should also changes his position
   //but only if it isn't dragged
-  changePosition(ScrollNotification notification) {
+  void changePosition(ScrollNotification notification) {
     if (_isDragInProcess) {
       return;
     }
@@ -498,7 +495,7 @@ class _DraggableScrollbarState extends State<DraggableScrollbar>
           _barOffset = barMaxScrollExtent;
         }
 
-        double viewDelta = getScrollViewDelta(
+        final viewDelta = getScrollViewDelta(
             details.delta.dy, barMaxScrollExtent, viewMaxScrollExtent);
 
         _viewOffset = widget.controller.position.pixels + viewDelta;
@@ -565,16 +562,16 @@ class ArrowCustomPainter extends CustomPainter {
 class ArrowClipper extends CustomClipper<Path> {
   @override
   Path getClip(Size size) {
-    Path path = Path();
+    final path = Path();
     path.lineTo(0.0, size.height);
     path.lineTo(size.width, size.height);
     path.lineTo(size.width, 0.0);
     path.lineTo(0.0, 0.0);
     path.close();
 
-    double arrowWidth = 8.0;
-    double startPointX = (size.width - arrowWidth) / 2;
-    double startPointY = size.height / 2 - arrowWidth / 2;
+    final arrowWidth = 8.0;
+    final startPointX = (size.width - arrowWidth) / 2;
+    var startPointY = size.height / 2 - arrowWidth / 2;
     path.moveTo(startPointX, startPointY);
     path.lineTo(startPointX + arrowWidth / 2, startPointY - arrowWidth / 2);
     path.lineTo(startPointX + arrowWidth, startPointY);
